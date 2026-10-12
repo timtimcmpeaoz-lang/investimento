@@ -1,0 +1,204 @@
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#10172a">
+<title>Meu Investimento</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;font-family:Arial,sans-serif;background:#f1f5f9;color:#172033}
+header{background:linear-gradient(135deg,#10172a,#1746a2);color:white;padding:25px 18px;border-radius:0 0 25px 25px}
+header h1{margin:0 0 8px;font-size:27px}
+header p{margin:0;color:#cbdcff}
+main{max-width:760px;margin:auto;padding:18px}
+.resumo{background:white;padding:22px;border-radius:18px;box-shadow:0 5px 20px #14213d12;margin-bottom:18px}
+.resumo small{color:#64748b}
+.total{font-size:32px;font-weight:bold;margin:10px 0;color:#1746a2;overflow-wrap:anywhere}
+nav{display:flex;gap:8px;margin:20px 0}
+nav button{flex:1;padding:13px 5px;border:0;border-radius:12px;background:#dce5f4;color:#17315e;font-weight:bold;cursor:pointer}
+nav button.ativo{background:#1746a2;color:white}
+.painel{background:white;border-radius:18px;padding:20px;margin-bottom:18px}
+h2{font-size:20px;margin:0 0 18px}
+label{display:block;font-size:14px;font-weight:bold;margin:13px 0 6px}
+input,select{width:100%;padding:13px;border:1px solid #cbd5e1;border-radius:10px;font-size:16px;background:white}
+.primario{width:100%;margin-top:20px;background:#087f5b;color:white;border:0;padding:15px;border-radius:12px;font-weight:bold;font-size:16px;cursor:pointer}
+.item{border:1px solid #e2e8f0;padding:16px;border-radius:14px;margin:12px 0}
+.item-topo{display:flex;justify-content:space-between;gap:10px;align-items:center}
+.codigo{font-size:19px;font-weight:bold;color:#1746a2}
+.tipo{font-size:12px;background:#e0ecff;padding:5px 8px;border-radius:8px}
+.detalhes{font-size:14px;color:#64748b;line-height:1.8;margin:10px 0}
+.valor{font-weight:bold;font-size:18px}
+.excluir{margin-top:12px;width:100%;padding:11px;background:#fff0f0;color:#c62828;border:1px solid #ffcaca;border-radius:10px;font-weight:bold;cursor:pointer}
+.vazio{text-align:center;padding:25px 10px;color:#64748b}
+.rodape{text-align:center;color:#64748b;font-size:12px;padding:20px}
+[hidden]{display:none!important}
+</style>
+</head>
+<body>
+<header>
+<h1>📈 Meu Investimento</h1>
+<p>Controle sua carteira de investimentos</p>
+</header>
+<main>
+<section class="resumo">
+<small>TOTAL INVESTIDO</small>
+<div class="total" id="total">R$ 0,00</div>
+<span id="contagem">0 investimentos cadastrados</span>
+</section>
+
+<nav>
+<button class="ativo" id="tabInicio" onclick="abrirAba('inicio')">Início</button>
+<button id="tabAdicionar" onclick="abrirAba('adicionar')">＋ Adicionar</button>
+<button id="tabCarteira" onclick="abrirAba('carteira')">Minha carteira</button>
+</nav>
+
+<section id="inicio" class="painel">
+<h2>Resumo da carteira</h2>
+<p>Bem-vindo ao Meu Investimento!</p>
+<p>Cadastre suas ações e fundos imobiliários para acompanhar seus investimentos.</p>
+<button class="primario" onclick="abrirAba('adicionar')">＋ ADICIONAR INVESTIMENTO</button>
+</section>
+
+<section id="adicionar" class="painel" hidden>
+<h2>Adicionar investimento</h2>
+<form id="formulario">
+<label for="codigo">Código do ativo</label>
+<input id="codigo" placeholder="Ex.: VALE3 ou MXRF11" maxlength="20" required>
+
+<label for="tipo">Tipo de investimento</label>
+<select id="tipo" required>
+<option value="Ação">Ação</option>
+<option value="Fundo Imobiliário (FII)">Fundo imobiliário (FII)</option>
+</select>
+
+<label for="quantidade">Quantidade de ações ou cotas</label>
+<input id="quantidade" type="number" min="0.000001" step="any" placeholder="Ex.: 10" required>
+
+<label for="preco">Preço por unidade (R$)</label>
+<input id="preco" type="number" min="0.01" step="any" placeholder="Ex.: 25.50" required>
+
+<button class="primario" type="submit">ADICIONAR INVESTIMENTO</button>
+</form>
+</section>
+
+<section id="carteira" class="painel" hidden>
+<h2>Minha carteira</h2>
+<div id="lista"></div>
+</section>
+
+<div class="rodape">Meu Investimento · Dados salvos neste aparelho</div>
+</main>
+
+<script>
+const CHAVE="meuInvestimentoCarteiraV1";
+const moeda=new Intl.NumberFormat("pt-BR",{style:"currency",currency:"BRL"});
+let investimentos=[];
+
+try{
+const salvos=localStorage.getItem(CHAVE);
+investimentos=salvos?JSON.parse(salvos):[];
+if(!Array.isArray(investimentos))investimentos=[];
+}catch(e){investimentos=[];}
+
+function salvar(){
+try{localStorage.setItem(CHAVE,JSON.stringify(investimentos));}
+catch(e){alert("Não foi possível salvar os dados neste aparelho.");}
+}
+
+function abrirAba(aba){
+["inicio","adicionar","carteira"].forEach(nome=>{
+document.getElementById(nome).hidden=nome!==aba;
+const id=nome==="inicio"?"tabInicio":nome==="adicionar"?"tabAdicionar":"tabCarteira";
+document.getElementById(id).classList.toggle("ativo",nome===aba);
+});
+if(aba==="carteira")mostrarCarteira();
+atualizarResumo();
+}
+
+function atualizarResumo(){
+const total=investimentos.reduce((s,i)=>s+i.quantidade*i.preco,0);
+document.getElementById("total").textContent=moeda.format(total);
+document.getElementById("contagem").textContent=investimentos.length+
+(investimentos.length===1?" investimento cadastrado":" investimentos cadastrados");
+}
+
+document.getElementById("formulario").addEventListener("submit",function(e){
+e.preventDefault();
+const codigo=document.getElementById("codigo").value.trim().toUpperCase();
+const tipo=document.getElementById("tipo").value;
+const quantidade=Number(document.getElementById("quantidade").value);
+const preco=Number(document.getElementById("preco").value);
+
+if(!codigo||!Number.isFinite(quantidade)||!Number.isFinite(preco)||quantidade<=0||preco<=0){
+alert("Confira o código, a quantidade e o preço.");
+return;
+}
+
+investimentos.push({
+id:Date.now().toString()+Math.random().toString(36).slice(2),
+codigo,tipo,quantidade,preco
+});
+salvar();
+this.reset();
+abrirAba("carteira");
+alert("Investimento adicionado com sucesso!");
+});
+
+function mostrarCarteira(){
+const lista=document.getElementById("lista");
+lista.replaceChildren();
+
+if(investimentos.length===0){
+const vazio=document.createElement("div");
+vazio.className="vazio";
+vazio.textContent="Sua carteira está vazia. Adicione seu primeiro investimento!";
+lista.appendChild(vazio);
+return;
+}
+
+investimentos.forEach(item=>{
+const cartao=document.createElement("article");
+cartao.className="item";
+const topo=document.createElement("div");
+topo.className="item-topo";
+
+const codigo=document.createElement("span");
+codigo.className="codigo";
+codigo.textContent=item.codigo;
+
+const tipo=document.createElement("span");
+tipo.className="tipo";
+tipo.textContent=item.tipo;
+topo.append(codigo,tipo);
+
+const detalhes=document.createElement("div");
+detalhes.className="detalhes";
+detalhes.textContent="Quantidade: "+item.quantidade+" · Preço unitário: "+moeda.format(item.preco);
+
+const valor=document.createElement("div");
+valor.className="valor";
+valor.textContent="Total: "+moeda.format(item.quantidade*item.preco);
+
+const excluir=document.createElement("button");
+excluir.className="excluir";
+excluir.textContent="EXCLUIR INVESTIMENTO";
+excluir.addEventListener("click",()=>{
+if(confirm("Deseja excluir "+item.codigo+" da sua carteira?")){
+investimentos=investimentos.filter(i=>i.id!==item.id);
+salvar();
+atualizarResumo();
+mostrarCarteira();
+}
+});
+
+cartao.append(topo,detalhes,valor,excluir);
+lista.appendChild(cartao);
+});
+}
+
+atualizarResumo();
+</script>
+</body>
+</html>
