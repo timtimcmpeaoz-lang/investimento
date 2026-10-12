@@ -203,5 +203,17 @@ lista.appendChild(cartao);
 
 atualizarResumo();
 </script>
+<script>
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", function () {
+    navigator.serviceWorker.register(
+      "/investimento/service-worker.js"
+    ).catch(function (erro) {
+      console.error("Erro ao ativar modo offline:", erro);
+    });
+  });
+}
+</script>
+
 </body>
 </html>
