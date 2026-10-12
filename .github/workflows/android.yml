@@ -18,8 +18,17 @@ jobs:
           distribution: temurin
           java-version: '17'
 
+      
       - name: Preparar Android
         uses: android-actions/setup-android@v3
+        with:
+          cmdline-tools-version: 11076708
+          accept-android-sdk-licenses: true
+          packages: |
+            platform-tools
+            platforms;android-35
+            build-tools;35.0.0
+
 
       - name: Instalar Bubblewrap
         run: npm install -g @bubblewrap/cli
