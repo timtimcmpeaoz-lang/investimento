@@ -1,0 +1,45 @@
+
+name: Gerar APK Meu Investimento
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Baixar projeto
+        uses: actions/checkout@v4
+
+      - name: Configurar Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Preparar Android
+        uses: android-actions/setup-android@v3
+
+      - name: Instalar Bubblewrap
+        run: npm install -g @bubblewrap/cli
+
+      - name: Gerar pacote Android
+        run: |
+          mkdir -p android-app
+          bubblewrap init --manifest https://timtimcmpeaoz-lang.github.io/investimento/manifest.json --directory android-app --packageId com.timtimcell.meuinvestimento --appName "Meu Investimento" --launcherName "Investimento" --display standalone --themeColor "#2563eb" --backgroundColor "#101827" --skipPwaValidation
+          cd android-app
+          yes "" | bubblewrap update || true
+          yes "" | bubblewrap build || true
+
+      - name: Procurar APK
+        run: |
+          find android-app -type f -name "*.apk" -print
+
+      - name: Disponibilizar APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: Meu-Investimento-APK
+          path: android-app/**/*.apk
+          if-no-files-found: error
+          retention-days: 7
