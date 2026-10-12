@@ -1,0 +1,162 @@
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Jogo da Cobrinha</title>
+<style>
+body {
+  background: #101827;
+  color: white;
+  font-family: Arial, sans-serif;
+  text-align: center;
+  margin: 0;
+  padding: 20px 10px;
+}
+h1 { color: #65f59b; }
+#pontos { font-size: 22px; margin: 12px; }
+canvas {
+  width: min(92vw, 400px);
+  height: min(92vw, 400px);
+  background: #07111e;
+  border: 3px solid #65f59b;
+  border-radius: 10px;
+  touch-action: none;
+}
+button {
+  background: #65f59b;
+  color: #102018;
+  border: 0;
+  border-radius: 10px;
+  padding: 14px 22px;
+  margin: 5px;
+  font-size: 20px;
+  font-weight: bold;
+}
+.controles {
+  display: grid;
+  grid-template-columns: repeat(3, 70px);
+  justify-content: center;
+  gap: 6px;
+  margin-top: 12px;
+}
+.controles button { padding: 12px; }
+</style>
+</head>
+<body>
+<h1>🐍 Cobrinha</h1>
+<div id="pontos">Pontos: 0</div>
+<canvas id="jogo" width="400" height="400"></canvas>
+<div>
+  <button onclick="iniciar()">JOGAR / REINICIAR</button>
+</div>
+<div class="controles">
+  <span></span><button onclick="mover(0,-1)">⬆️</button><span></span>
+  <button onclick="mover(-1,0)">⬅️</button>
+  <button onclick="mover(0,1)">⬇️</button>
+  <button onclick="mover(1,0)">➡️</button>
+</div>
+<p>Coma as frutas e não bata nas paredes!</p>
+<script>
+const canvas = document.getElementById("jogo");
+const ctx = canvas.getContext("2d");
+const tamanho = 20;
+const total = 20;
+let cobra, fruta, dx, dy, pontos, timer, ativo = false;
+
+function iniciar() {
+  clearInterval(timer);
+  cobra = [{x:8,y:10},{x:7,y:10},{x:6,y:10}];
+  dx = 1; dy = 0; pontos = 0;
+  ativo = true;
+  criarFruta();
+  atualizarPontos();
+  desenhar();
+  timer = setInterval(passo, 130);
+}
+
+function criarFruta() {
+  do {
+    fruta = {
+      x: Math.floor(Math.random()*total),
+      y: Math.floor(Math.random()*total)
+    };
+  } while (cobra.some(p => p.x===fruta.x && p.y===fruta.y));
+}
+
+function mover(x,y) {
+  if (x === -dx && y === -dy) return;
+  dx = x; dy = y;
+  if (!ativo) iniciar();
+}
+
+function passo() {
+  const cabeca = {x:cobra[0].x+dx, y:cobra[0].y+dy};
+  if (cabeca.x<0 || cabeca.x>=total ||
+      cabeca.y<0 || cabeca.y>=total ||
+      cobra.some(p=>p.x===cabeca.x && p.y===cabeca.y)) {
+    ativo = false;
+    clearInterval(timer);
+    ctx.fillStyle = "white";
+    ctx.font = "bold 25px Arial";
+    ctx.textAlign = "center";
+    ctx.fillText("Fim de jogo!", 200, 200);
+    return;
+  }
+
+  cobra.unshift(cabeca);
+  if (cabeca.x===fruta.x && cabeca.y===fruta.y) {
+    pontos += 10;
+    criarFruta();
+    atualizarPontos();
+  } else {
+    cobra.pop();
+  }
+  desenhar();
+}
+
+function atualizarPontos() {
+  document.getElementById("pontos").textContent = "Pontos: " + pontos;
+}
+
+function desenhar() {
+  ctx.fillStyle = "#07111e";
+  ctx.fillRect(0,0,400,400);
+
+  ctx.fillStyle = "#ff5364";
+  ctx.beginPath();
+  ctx.arc(fruta.x*20+10,fruta.y*20+10,8,0,Math.PI*2);
+  ctx.fill();
+
+  cobra.forEach((p,i)=>{
+    ctx.fillStyle = i===0 ? "#b5ffcf" : "#45dc85";
+    ctx.fillRect(p.x*20+2,p.y*20+2,16,16);
+  });
+}
+
+document.addEventListener("keydown", e=>{
+  if(e.key==="ArrowUp") mover(0,-1);
+  if(e.key==="ArrowDown") mover(0,1);
+  if(e.key==="ArrowLeft") mover(-1,0);
+  if(e.key==="ArrowRight") mover(1,0);
+});
+
+let inicioX=0, inicioY=0;
+canvas.addEventListener("touchstart", e=>{
+  inicioX=e.changedTouches[0].clientX;
+  inicioY=e.changedTouches[0].clientY;
+},{passive:true});
+
+canvas.addEventListener("touchend", e=>{
+  const t=e.changedTouches[0];
+  const x=t.clientX-inicioX, y=t.clientY-inicioY;
+  if(Math.max(Math.abs(x),Math.abs(y))<15) return;
+  if(Math.abs(x)>Math.abs(y)) mover(x>0?1:-1,0);
+  else mover(0,y>0?1:-1);
+},{passive:true});
+
+iniciar();
+</script>
+</body>
+</html>
