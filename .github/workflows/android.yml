@@ -31,11 +31,13 @@ jobs:
       - name: Instalar Bubblewrap
         run: npm install -g @bubblewrap/cli
 
+      
       - name: Gerar pacote Android
         run: |
           mkdir -p android-app
-          bubblewrap init --manifest https://timtimcmpeaoz-lang.github.io/investimento/manifest.json --directory android-app --packageId com.timtimcell.meuinvestimento --appName "Meu Investimento" --launcherName "Investimento" --display standalone --themeColor "#2563eb" --backgroundColor "#101827" --skipPwaValidation
           cd android-app
+          bubblewrap init --manifest https://timtimcmpeaoz-lang.github.io/investimento/manifest.json --directory . --packageId com.timtimcell.meuinvestimento --appName "Meu Investimento" --launcherName "Investimento" --display standalone --themeColor "#2563eb" --backgroundColor "#101827" --skipPwaValidation --jdkPath "$JAVA_HOME" --androidSdkPath "$ANDROID_HOME"
+
           yes "" | bubblewrap update || true
           yes "" | bubblewrap build || true
 
